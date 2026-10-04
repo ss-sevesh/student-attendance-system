@@ -2,7 +2,7 @@
 
 Status: Proposed for review on 2026-10-04. Source: [SPEC-id-card-extraction.md](../SPEC-id-card-extraction.md). Design: [id-card-plan.md](id-card-plan.md). This list is separate from the completed [identity tasks](todo.md).
 
-2026-10-04 user-directed revision: the college card review now shows only editable DOB, residential address, and phone suggestions; name and roll number are entered manually. Noisy raw OCR text and unrelated labels are hidden from this screen. The parser handles repeated sections, border symbols, and blank lines in addresses. Focused parser and desktop/375 px upload browser tests passed. Profile persistence remains a separate module.
+2026-10-04 user-directed revision: the college card upload API and review now expose only editable DOB, residential address, and phone suggestions; name and roll number are entered manually. Noisy raw OCR text and unrelated labels stay inside the server OCR pipeline. The parser handles repeated sections, border symbols, and blank lines in addresses. Focused parser and desktop/375 px upload browser tests passed. Profile persistence remains a separate module.
 
 Every completed task also follows the Definition of Done in the plan: passing focused tests, lint/type checks and build when affected, relevant runtime inspection, truthful documentation, and no sensitive artifacts. Run each PowerShell command separately.
 
@@ -79,7 +79,7 @@ Every completed task also follows the Definition of Done in the plan: passing fo
 **Description:** Add the authenticated multipart endpoint with a hard request-byte cap and safe result/error responses.
 
 **Acceptance criteria:**
-- [x] Missing/invalid sessions receive 401; matching-origin authenticated requests return real OCR candidates and raw text.
+- [x] Missing/invalid sessions receive 401; matching-origin authenticated requests return only DOB, residential address, and phone suggestions after the user-directed revision.
 - [x] More than one file, oversize body, unsupported content, and OCR failures return safe bounded errors without writing data to SQLite or disk.
 
 **Verification:**
@@ -99,7 +99,7 @@ Every completed task also follows the Definition of Done in the plan: passing fo
 **Description:** Add the in-memory registration page, preview/progress/results/retry UI, and activate the dashboard link when working.
 
 **Acceptance criteria:**
-- [x] A signed-in student can upload, review raw text and candidates, replace and retry; no result is represented as saved.
+- [x] A signed-in student can upload, review/edit DOB, residential address, and phone, enter name and roll number manually, replace and retry; no result is represented as saved.
 - [x] Keyboard labels, announced status/errors, duplicate-submit prevention, object URL cleanup, and responsive layout work at 375 px.
 
 **Verification:**

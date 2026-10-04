@@ -32,7 +32,7 @@ Resolved at runtime via `process.cwd()`. Workers are configured with `cacheMetho
 
 **Measured OCR latency:** ~276–308 ms (500 × 260 px synthetic card, cold worker, English LSTM, Windows).
 
-Sign in, choose one JPEG, PNG, or WebP image up to 10 MB from **Register Student** on the dashboard, then select **Extract Details**. The review page shows only editable date of birth, residential address, and phone suggestions, plus blank name and roll-number inputs for manual entry. OCR noise, raw text, and unrelated labels are hidden from this review screen. You can replace the image or retry after an error. Images and reviewed values are cleared when you leave or refresh the page. Nothing is saved as a profile. See [ID-card extraction notes](docs/id-card-extraction.md) for verified behavior and limits.
+Sign in, choose one JPEG, PNG, or WebP image up to 10 MB from **Register Student** on the dashboard, then select **Extract Details**. The review page shows only editable date of birth, residential address, and phone suggestions, plus blank name and roll-number inputs for manual entry. The upload API does not send raw OCR text or unrelated labels to the browser. You can replace the image or retry after an error. Images and reviewed values are cleared when you leave or refresh the page. Nothing is saved as a profile. See [ID-card extraction notes](docs/id-card-extraction.md) for verified behavior and limits.
 
 ## Run locally
 

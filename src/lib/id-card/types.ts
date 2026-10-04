@@ -54,6 +54,14 @@ export type ExtractionResult = Readonly<{
   error?: Readonly<{ code: string; message: string }>;
 }>;
 
+/** Only the approved college-card suggestions leave the extraction API. */
+export type IdCardReviewResult = Readonly<{
+  source: 'id-card';
+  status: ExtractionResult['status'];
+  fields: Pick<ExtractedFields, 'birthDate' | 'residentialAddress' | 'phone'>;
+  error?: ExtractionResult['error'];
+}>;
+
 /** Empty fields value — used as the baseline when constructing results. */
 export const EMPTY_FIELDS: ExtractedFields = Object.freeze({
   name: '',

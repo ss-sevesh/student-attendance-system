@@ -9,7 +9,7 @@
  * - Oversized requests return 413.
  * - Unsupported or corrupt content returns 422 with status 'failed'.
  * - Authenticated valid uploads return 200 with real OCR extraction.
- * - Leading zeros in student ID survive the HTTP boundary.
+ * - Only the three approved college-card suggestions cross the HTTP boundary.
  * - Blank image fails safely without crash.
  * - No OCR text or images are written to database or disk.
  */
@@ -23,15 +23,16 @@ import { MAX_IMAGE_BYTES } from '../../src/lib/id-card/image';
 const origin = 'http://127.0.0.1:3100';
 const OCR_TIMEOUT_MS = 60_000;
 
-const SYNTHETIC_CARD_SVG = `<svg width="600" height="320" xmlns="http://www.w3.org/2000/svg">
-  <rect width="600" height="320" fill="#ffffff"/>
+const SYNTHETIC_CARD_SVG = `<svg width="700" height="390" xmlns="http://www.w3.org/2000/svg">
+  <rect width="700" height="390" fill="#ffffff"/>
   <text x="30" y="50"  font-size="22" font-weight="bold" font-family="Arial" fill="#000000">STATE INSTITUTE OF TECHNOLOGY</text>
-  <text x="30" y="95"  font-size="20" font-family="Arial" fill="#000000">Name: Jane Example</text>
-  <text x="30" y="135" font-size="20" font-family="Arial" fill="#000000">Student ID: 001234567</text>
-  <text x="30" y="175" font-size="20" font-family="Arial" fill="#000000">Department: Computer Science</text>
-  <text x="30" y="215" font-size="20" font-family="Arial" fill="#000000">Program: B.Tech</text>
-  <text x="30" y="255" font-size="20" font-family="Arial" fill="#000000">Year: 2</text>
-  <text x="30" y="295" font-size="20" font-family="Arial" fill="#000000">Blood Group: O+</text>
+  <text x="30" y="95"  font-size="22" font-family="Arial" fill="#000000">Date of Birth : 11.05.2006</text>
+  <text x="30" y="140" font-size="22" font-family="Arial" fill="#000000">Blood Group : A1+ve</text>
+  <text x="30" y="185" font-size="22" font-family="Arial" fill="#000000">Resi. Address :</text>
+  <text x="30" y="225" font-size="22" font-family="Arial" fill="#000000">S/O SAMPLE PARENT</text>
+  <text x="30" y="265" font-size="22" font-family="Arial" fill="#000000">3/498,2E, KAMARAJ NAGAR</text>
+  <text x="30" y="305" font-size="22" font-family="Arial" fill="#000000">PERUMANALLUR-641666</text>
+  <text x="30" y="350" font-size="22" font-family="Arial" fill="#000000">Phone : 9876543210</text>
 </svg>`;
 
 async function createAuthenticatedSession(): Promise<string> {
@@ -248,13 +249,12 @@ describe('Protected ID-card extract route (Task 4)', () => {
 
       expect(body.source).toBe('id-card');
       expect(body.status).toBe('success');
-      expect(body.fields.name).toMatch(/Jane\s*Example/i);
-      expect(body.fields.studentId).toBe('001234567'); // Leading zeros intact!
-      expect(body.fields.department).toMatch(/Computer\s*Science/i);
-      expect(body.fields.program).toMatch(/B\.?Tech/i);
-      expect(body.fields.year).toBe('2');
-      expect(body.rawText).toBeTruthy();
-      expect(body.latencyMs).toBeGreaterThan(0);
+      expect(body.fields.birthDate).toBe('11.05.2006');
+      expect(body.fields.residentialAddress).toContain('KAMARAJ NAGAR');
+      expect(body.fields.phone).toBe('9876543210');
+      expect(Object.keys(body.fields).sort()).toEqual(['birthDate', 'phone', 'residentialAddress']);
+      expect(body).not.toHaveProperty('rawText');
+      expect(body).not.toHaveProperty('additionalFields');
     },
     OCR_TIMEOUT_MS,
   );

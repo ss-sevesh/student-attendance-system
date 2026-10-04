@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import type { ExtractionResult } from '../lib/id-card/types';
+import type { IdCardReviewResult } from '../lib/id-card/types';
 
 interface IdCardUploadProps {
   userEmail: string;
@@ -18,7 +18,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
   const [isExtracting, setIsExtracting] = useState(false);
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [result, setResult] = useState<ExtractionResult | null>(null);
+  const [result, setResult] = useState<IdCardReviewResult | null>(null);
   const [review, setReview] = useState<ReviewValues>(emptyReview);
 
   // Clean up Object URL when previewUrl changes or component unmounts
@@ -101,7 +101,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
         body: formData,
       });
 
-      const data = (await response.json()) as ExtractionResult & {
+      const data = (await response.json()) as IdCardReviewResult & {
         error?: { code: string; message: string };
       };
 
