@@ -55,6 +55,14 @@ Sessions use an HttpOnly, SameSite=Lax cookie with a seven-day expiry. The cooki
 
 ## Checks
 
+## Try attendance with your face
+
+After starting the app, sign in and open `/attendance/demo` (or use the demo link on Attendance). Upload a clear reference selfie, tick consent, and press **Save demo reference**. Press **Start camera**, allow camera access, look straight ahead, and press **Mark demo attendance**. A match saves **Present** with a timestamp; a mismatch does not mark the attempt. **Reset demo result** lets you retry; **Remove demo reference** deletes the demo reference and result. Only an encrypted face descriptor is saved, not the photo. Demo results are separate from scheduled class attendance and work at any time.
+
+Verified with the actual model and API on desktop and 375 px using a photographic video stream. Your physical webcam/live-person match still needs your own test. This prototype has no liveness check.
+
+## Check commands
+
 ```powershell
 npm.cmd run test -- --run
 npm.cmd run lint

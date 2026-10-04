@@ -6,11 +6,11 @@ import { HttpError } from '../auth/http';
 
 const timezone = process.env.ATTENDANCE_TIMEZONE ?? 'Asia/Kolkata';
 const keyPath = join(process.cwd(), 'data', 'attendance.key');
-const MATCH_LIMIT = 0.5; // Prototype threshold; not calibrated for real attendance.
+export const MATCH_LIMIT = 0.5; // Prototype threshold; not calibrated for real attendance.
 
 export type Period = { id: number; weekday: number; start_time: string; name: string };
 
-function databasePath() {
+export function databasePath() {
   return process.env.DATABASE_PATH ?? join(process.cwd(), 'data', 'student.sqlite');
 }
 
@@ -29,14 +29,14 @@ function key(): Buffer {
   return stored;
 }
 
-function encrypt(value: number[]): string {
+export function encryptDescriptor(value: number[]): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', key(), iv);
   const ciphertext = Buffer.concat([cipher.update(JSON.stringify(value)), cipher.final()]);
   return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString('base64');
 }
 
-function decrypt(value: string): number[] {
+export function decryptDescriptor(value: string): number[] {
   const bytes = Buffer.from(value, 'base64');
   const decipher = createDecipheriv('aes-256-gcm', key(), bytes.subarray(0, 12));
   decipher.setAuthTag(bytes.subarray(12, 28));
@@ -81,7 +81,7 @@ export function enroll(userId: string, descriptor: number[]) {
   const db = openDatabase(databasePath());
   try {
     db.prepare('INSERT INTO face_enrollments (user_id, encrypted_descriptor, enrolled_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET encrypted_descriptor = excluded.encrypted_descriptor, enrolled_at = excluded.enrolled_at')
-      .run(userId, encrypt(descriptor), Date.now());
+      .run(userId, encryptDescriptor(descriptor), Date.now());
   } finally { db.close(); }
 }
 
@@ -106,7 +106,7 @@ export function checkIn(userId: string, periodId: number, descriptor: number[], 
     }
     const enrollment = db.prepare('SELECT encrypted_descriptor FROM face_enrollments WHERE user_id = ?').get(userId) as { encrypted_descriptor: string } | undefined;
     if (!enrollment) throw new HttpError(409, 'not_enrolled', 'Enroll your ID-card portrait first.');
-    const reference = decrypt(enrollment.encrypted_descriptor);
+    const reference = decryptDescriptor(enrollment.encrypted_descriptor);
     const distance = Math.hypot(...descriptor.map((value, index) => value - reference[index]));
     if (distance >= MATCH_LIMIT) throw new HttpError(422, 'face_mismatch', 'Face did not match the enrolled portrait. Try again or ask staff for help.');
     const recordedAt = now.getTime();

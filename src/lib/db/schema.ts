@@ -3,7 +3,7 @@ import type { DatabaseSync } from 'node:sqlite';
 export function initializeSchema(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON');
   const version = db.prepare('PRAGMA user_version').get() as { user_version: number };
-  if (version.user_version > 2) throw new Error('Database schema is newer than this application');
+  if (version.user_version > 3) throw new Error('Database schema is newer than this application');
   if (version.user_version === 0) db.exec(`
     BEGIN;
     CREATE TABLE users (
@@ -48,6 +48,21 @@ export function initializeSchema(db: DatabaseSync): void {
     INSERT INTO attendance_periods (weekday, start_time, name)
     SELECT day, '09:45', 'Period 2' FROM (SELECT 1 AS day UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5);
     PRAGMA user_version = 2;
+    COMMIT;
+  `);
+  if (version.user_version < 3) db.exec(`
+    BEGIN;
+    CREATE TABLE attendance_demo_references (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      encrypted_descriptor TEXT NOT NULL,
+      enrolled_at INTEGER NOT NULL
+    );
+    CREATE TABLE attendance_demo_records (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      recorded_at INTEGER NOT NULL,
+      distance REAL NOT NULL
+    );
+    PRAGMA user_version = 3;
     COMMIT;
   `);
 }

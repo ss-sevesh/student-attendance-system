@@ -38,7 +38,7 @@ it('migrates an identity-only database while preserving its users', () => {
   legacy.close();
   const migrated = openDatabase(path);
   try {
-    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 2 });
+    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 3 });
     expect(migrated.prepare('SELECT email FROM users WHERE id = ?').get('legacy')).toEqual({ email: 'legacy@example.com' });
     expect(migrated.prepare('SELECT count(*) AS count FROM attendance_periods').get()).toEqual({ count: 10 });
   } finally { migrated.close(); }

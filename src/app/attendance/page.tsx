@@ -11,6 +11,7 @@ export default async function AttendancePage() {
     <p className="eyebrow">Student attendance prototype</p>
     <h1>Period check-in</h1>
     <p>Signed in as {user.email}. Each period opens for five minutes from its scheduled start.</p>
+    <p><Link href="/attendance/demo">Try the attendance demo with your selfie</Link></p>
     <AttendanceClient />
   </main>;
 }

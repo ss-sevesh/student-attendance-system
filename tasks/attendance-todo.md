@@ -91,4 +91,12 @@ Status: Complete within local browser fixture scope, 2026-10-04. Desktop and 375
 
 ## Deferred production track
 
+## Anytime selfie demo
+
+- [x] Separate authenticated demo page and APIs, encrypted reference, saved Present, reset/removal, schema v3 migration.
+- [x] Actual face model and actual backend browser journey passed on desktop and 375 px; 75 unit/integration tests passed, lint/typecheck/build passed.
+- [ ] User tests their own reference selfie and physical webcam. Photographic video verification does not establish liveness.
+
+## Production follow-up
+
 - [ ] Create a separate production spec for trusted biometric processing, liveness, ID ownership, staff correction/audit, retention, accessibility alternatives, and institutional approval. This is **not** required to finish the local demo and no current prototype result should be used for real attendance decisions.

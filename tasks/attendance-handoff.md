@@ -42,6 +42,12 @@ Set `ADMIN_EMAIL` in `.env.local` to an application account for the timetable ed
 
 ## Next-session priority
 
+### Anytime selfie demo added
+
+`/attendance/demo` now supports a reference selfie, explicit consent, encrypted descriptor persistence, camera matching, saved latest demo Present timestamp, reset, and removal. Separate SQLite v3 tables keep demo data apart from class records. Replacement clears the prior demo result. Every attempt compares the face, including after a previous success; mismatch preserves only the historical result.
+
+Verification: 75 unit/integration tests pass; lint, typecheck, production build pass. Both new desktop/mobile browser tests pass using actual face models and actual demo API with a photographic canvas video stream (no mocked attendance response). Existing four real-model browser tests also pass. The first new browser attempts failed from an ambiguous test selector and a five-second model-load wait; corrected selectors and a bounded 30-second enrollment wait passed. Physical webcam/live-person verification remains pending. User asked to wrap due to usage limit; no GitHub actions performed.
+
 1. Read the task list and this handoff. Check the local Git working tree. The user owns GitHub setup.
 2. On an approved physical card and with the student's consent, verify card portrait extraction and a live-person camera match in an open five-minute period, then a second period. Keep this evidence separate from the photographic replay test.
 3. If Chrome DevTools MCP becomes available, repeat network/console inspection there. Its profile-lock error is recorded above; Playwright MCP already supplied equivalent browser evidence.
