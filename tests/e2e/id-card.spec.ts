@@ -4,15 +4,16 @@ import sharp from 'sharp';
 
 const password = 'password-horse-battery';
 
-const SYNTHETIC_CARD_SVG = `<svg width="600" height="320" xmlns="http://www.w3.org/2000/svg">
-  <rect width="600" height="320" fill="#ffffff"/>
+const SYNTHETIC_CARD_SVG = `<svg width="700" height="390" xmlns="http://www.w3.org/2000/svg">
+  <rect width="700" height="390" fill="#ffffff"/>
   <text x="30" y="50"  font-size="22" font-weight="bold" font-family="Arial" fill="#000000">STATE INSTITUTE OF TECHNOLOGY</text>
-  <text x="30" y="95"  font-size="20" font-family="Arial" fill="#000000">Name: Jane Example</text>
-  <text x="30" y="135" font-size="20" font-family="Arial" fill="#000000">Student ID: 001234567</text>
-  <text x="30" y="175" font-size="20" font-family="Arial" fill="#000000">Department: Computer Science</text>
-  <text x="30" y="215" font-size="20" font-family="Arial" fill="#000000">Program: B.Tech</text>
-  <text x="30" y="255" font-size="20" font-family="Arial" fill="#000000">Year: 2</text>
-  <text x="30" y="295" font-size="20" font-family="Arial" fill="#000000">Blood Group: O+</text>
+  <text x="30" y="95"  font-size="22" font-family="Arial" fill="#000000">Date of Birth : 11.05.2006</text>
+  <text x="30" y="140" font-size="22" font-family="Arial" fill="#000000">Blood Group : A1+ve</text>
+  <text x="30" y="185" font-size="22" font-family="Arial" fill="#000000">Resi. Address :</text>
+  <text x="30" y="225" font-size="22" font-family="Arial" fill="#000000">S/O SAMPLE PARENT</text>
+  <text x="30" y="265" font-size="22" font-family="Arial" fill="#000000">3/498,2E, KAMARAJ NAGAR</text>
+  <text x="30" y="305" font-size="22" font-family="Arial" fill="#000000">PERUMANALLUR-641666</text>
+  <text x="30" y="350" font-size="22" font-family="Arial" fill="#000000">Phone : 9876543210</text>
 </svg>`;
 
 async function createSyntheticPngBuffer(): Promise<Buffer> {
@@ -37,7 +38,7 @@ test('unauthenticated users are redirected from /register to /login', async ({ p
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test('authenticated student can navigate to /register, preview, extract ID card, review raw text, and replace/retry', async ({
+test('authenticated student can review only college fields, enter name and roll, and replace the image', async ({
   page,
 }) => {
   const email = `student-ocr-${randomUUID()}@example.com`;
@@ -103,24 +104,16 @@ test('authenticated student can navigate to /register, preview, extract ID card,
   await expect(page.getByRole('heading', { name: 'Extraction Review' })).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByText(/Temporary candidate data/)).toBeVisible();
+  await expect(page.getByText(/Temporary review/)).toBeVisible();
 
-  // Verify candidate fields
-  const fieldsCard = page.locator('.extracted-fields-card');
-  await expect(fieldsCard.getByText('Jane Example')).toBeVisible();
-  await expect(fieldsCard.getByText('001234567')).toBeVisible(); // Leading zeros!
-  await expect(fieldsCard.getByText('Computer Science')).toBeVisible();
-
-  // Verify additional label
-  const additionalCard = page.locator('.additional-fields-card');
-  await expect(additionalCard.getByText('Blood Group')).toBeVisible();
-  await expect(additionalCard.getByText('O+')).toBeVisible();
-
-  // Verify raw OCR text is displayed in preformatted block
-  const rawTextPre = page.locator('.raw-text-content');
-  await expect(rawTextPre).toBeVisible();
-  await expect(rawTextPre).toContainText('Jane Example');
-  await expect(rawTextPre).toContainText('001234567');
+  await expect(page.getByLabel('Date of birth')).toHaveValue('11.05.2006');
+  await expect(page.getByLabel('Residential address')).toHaveValue(/KAMARAJ NAGAR/);
+  await expect(page.getByLabel('Phone')).toHaveValue('9876543210');
+  await page.getByLabel('Name (enter manually)').fill('Jane Example');
+  await page.getByLabel('Roll number (enter manually)').fill('001234567');
+  await expect(page.getByLabel('Roll number (enter manually)')).toHaveValue('001234567');
+  await expect(page.getByText('Blood Group')).toHaveCount(0);
+  await expect(page.locator('.raw-text-content')).toHaveCount(0);
 
   // Verify no horizontal overflow
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(

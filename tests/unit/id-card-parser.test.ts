@@ -106,6 +106,7 @@ alice@nu.edu
     expect(result.fields.department).toBe('');
     expect(result.fields.program).toBe('');
     expect(result.fields.birthDate).toBe('');
+    expect(result.fields.residentialAddress).toBe('');
     expect(result.fields.year).toBe('');
     expect(result.fields.email).toBe('');
     expect(result.fields.phone).toBe('');
@@ -253,5 +254,36 @@ Cyber Security
     const { fields, additionalFields } = parseFields('Name: Isaac\nCampus: North');
     expect(fields.name).toBe('Isaac');
     expect(additionalFields).toEqual([{ label: 'Campus', value: 'North' }]);
+  });
+
+  it('extracts only clean college-card DOB, address, and phone from noisy repeated OCR', () => {
+    const raw = `\\¥ [KE NGU
+i | Paseo Ue Best i
+A 3 Date of Birth : 11.05.2006 ;
+ho § | Blood Group : A1+ve
+bh &) \\ | Resi. Address :
+WA S/O SAMPLE PARENT
+| 3/498,2E, KAMARAJ NAGAR
+| BALASAMUTHRAM
+1 PERUMANALLUR-641666
+| Phone : 9876543210 |
+
+Date of Birth : 11.05.2006
+Blood Group : A1+ve
+Resi. Address :
+S/O SAMPLE PARENT
+3/498,2E, KAMARAJ NAGAR
+BALASAMUTHRAM
+PERUMANALLUR-641666
+Phone : 9876543210`;
+    const result = parseIdCardText(raw);
+    expect(result.fields.birthDate).toBe('11.05.2006');
+    expect(result.fields.residentialAddress).toBe('S/O SAMPLE PARENT\n3/498,2E, KAMARAJ NAGAR\nBALASAMUTHRAM\nPERUMANALLUR-641666');
+    expect(result.fields.phone).toBe('9876543210');
+  });
+
+  it('keeps address lines when OCR inserts blank lines between them', () => {
+    const result = parseIdCardText('Resi. Address :\n\nS/O SAMPLE PARENT\n\n3/498,2E, KAMARAJ NAGAR\n\nPERUMANALLUR-641666\n\nPhone : 9876543210');
+    expect(result.fields.residentialAddress).toBe('S/O SAMPLE PARENT\n3/498,2E, KAMARAJ NAGAR\nPERUMANALLUR-641666');
   });
 });

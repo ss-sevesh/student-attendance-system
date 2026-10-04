@@ -1,6 +1,6 @@
 # Student Registration Prototype
 
-This repository is a local Next.js web application. Students can create an application account, sign in, upload an ID-card image, and review local OCR text and candidate fields. A local period-attendance prototype is also available. The ID-card OCR result is temporary and is not a saved profile. Linways extraction and reviewed-profile save/reopen are separate modules not yet implemented. There is no mobile app; the 375 px checks exercise the responsive website.
+This repository is a local Next.js web application. Students can create an application account, sign in, upload an ID-card image, and review date of birth, residential address, and phone suggestions. They enter name and roll number manually. A local period-attendance prototype is also available. The ID-card review is temporary and is not a saved profile. Linways extraction and reviewed-profile save/reopen are separate modules not yet implemented. There is no mobile app; the 375 px checks exercise the responsive website.
 
 ## Attendance prototype
 
@@ -32,7 +32,7 @@ Resolved at runtime via `process.cwd()`. Workers are configured with `cacheMetho
 
 **Measured OCR latency:** ~276–308 ms (500 × 260 px synthetic card, cold worker, English LSTM, Windows).
 
-Sign in, choose one JPEG, PNG, or WebP image up to 10 MB from **Register Student** on the dashboard, then select **Extract Details**. The page shows the preview, candidate fields, additional labels, and raw OCR text. You can replace the image or retry after an error. Images and OCR results stay in request/browser memory and are cleared when you leave or refresh the page. Nothing is saved as a reviewed profile. See [ID-card extraction notes](docs/id-card-extraction.md) for verified behavior and limits.
+Sign in, choose one JPEG, PNG, or WebP image up to 10 MB from **Register Student** on the dashboard, then select **Extract Details**. The review page shows only editable date of birth, residential address, and phone suggestions, plus blank name and roll-number inputs for manual entry. OCR noise, raw text, and unrelated labels are hidden from this review screen. You can replace the image or retry after an error. Images and reviewed values are cleared when you leave or refresh the page. Nothing is saved as a profile. See [ID-card extraction notes](docs/id-card-extraction.md) for verified behavior and limits.
 
 ## Run locally
 

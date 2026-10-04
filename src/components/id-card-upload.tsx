@@ -9,6 +9,8 @@ interface IdCardUploadProps {
 
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+type ReviewValues = { name: string; rollNumber: string; birthDate: string; residentialAddress: string; phone: string };
+const emptyReview: ReviewValues = { name: '', rollNumber: '', birthDate: '', residentialAddress: '', phone: '' };
 
 export function IdCardUpload({ userEmail }: IdCardUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -17,6 +19,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [result, setResult] = useState<ExtractionResult | null>(null);
+  const [review, setReview] = useState<ReviewValues>(emptyReview);
 
   // Clean up Object URL when previewUrl changes or component unmounts
   useEffect(() => {
@@ -31,6 +34,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
     const file = event.target.files?.[0];
     setErrorMessage(null);
     setResult(null);
+    setReview(emptyReview);
 
     if (!file) {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -72,6 +76,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
     setSelectedFile(null);
     setPreviewUrl(null);
     setResult(null);
+    setReview(emptyReview);
     setErrorMessage(null);
     setProgressMessage('');
     const input = document.getElementById('id-card-input') as HTMLInputElement | null;
@@ -108,6 +113,13 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
         if (data.source === 'id-card') setResult(data);
       } else {
         setResult(data);
+        setReview({
+          name: '',
+          rollNumber: '',
+          birthDate: data.fields.birthDate,
+          residentialAddress: data.fields.residentialAddress,
+          phone: data.fields.phone,
+        });
       }
     } catch {
       setErrorMessage('A network error occurred while uploading. Please check your connection and try again.');
@@ -116,17 +128,6 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
       setProgressMessage('');
     }
   }
-
-  const knownFieldLabels: { key: keyof ExtractionResult['fields']; label: string }[] = [
-    { key: 'name', label: 'Full Name' },
-    { key: 'studentId', label: 'Student ID / Roll No' },
-    { key: 'department', label: 'Department' },
-    { key: 'program', label: 'Program / Course' },
-    { key: 'birthDate', label: 'Date of Birth' },
-    { key: 'year', label: 'Academic Year / Batch' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-  ];
 
   return (
     <div className="id-card-module">
@@ -212,7 +213,7 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
 
           <div className="memory-notice" role="note">
             <p>
-              <strong>Temporary candidate data:</strong> These values were extracted in-memory by local OCR.
+              <strong>Temporary review:</strong> Check the three suggested values and enter your name and roll number.
               Refreshing or leaving this page clears this data. No profile has been saved yet.
             </p>
           </div>
@@ -220,54 +221,24 @@ export function IdCardUpload({ userEmail }: IdCardUploadProps) {
           {result.status === 'success' && (
             <>
               <div className="extracted-fields-card">
-                <h3>Detected Candidate Fields</h3>
-                <dl className="fields-grid">
-                  {knownFieldLabels.map(({ key, label }) => {
-                    const value = result.fields[key];
-                    return (
-                      <div key={key} className="field-row">
-                        <dt className="field-name">{label}</dt>
-                        <dd className="field-value">
-                          {value ? (
-                            <span className="value-detected">{value}</span>
-                          ) : (
-                            <span className="value-empty">(not detected)</span>
-                          )}
-                        </dd>
-                      </div>
-                    );
-                  })}
-                </dl>
-              </div>
-
-              {result.additionalFields.length > 0 && (
-                <div className="additional-fields-card">
-                  <h3>Additional Detected Labels</h3>
-                  <dl className="fields-grid">
-                    {result.additionalFields.map((field, idx) => (
-                      <div key={idx} className="field-row">
-                        <dt className="field-name">{field.label}</dt>
-                        <dd className="field-value">
-                          <span className="value-detected">{field.value}</span>
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+                <h3>Review ID details</h3>
+                <div className="review-fields">
+                  <label htmlFor="review-name">Name (enter manually)</label>
+                  <input id="review-name" value={review.name} onChange={(event) => setReview({ ...review, name: event.target.value })} autoComplete="name" />
+                  <label htmlFor="review-roll">Roll number (enter manually)</label>
+                  <input id="review-roll" value={review.rollNumber} onChange={(event) => setReview({ ...review, rollNumber: event.target.value })} />
+                  <label htmlFor="review-dob">Date of birth</label>
+                  <input id="review-dob" value={review.birthDate} onChange={(event) => setReview({ ...review, birthDate: event.target.value })} placeholder="DD.MM.YYYY" />
+                  <label htmlFor="review-address">Residential address</label>
+                  <textarea id="review-address" rows={4} value={review.residentialAddress} onChange={(event) => setReview({ ...review, residentialAddress: event.target.value })} />
+                  <label htmlFor="review-phone">Phone</label>
+                  <input id="review-phone" type="tel" inputMode="tel" value={review.phone} onChange={(event) => setReview({ ...review, phone: event.target.value })} />
                 </div>
-              )}
-
-              <div className="raw-text-card">
-                <h3>Raw OCR Text (Untrusted source text)</h3>
-                <p className="form-help">
-                  Inspect the verbatim text read from your card to verify accuracy:
-                </p>
-                <pre className="raw-text-content">{result.rawText}</pre>
               </div>
 
               <div className="next-steps-card">
                 <p className="form-help">
-                  Signed in as <strong>{userEmail}</strong>. When the reviewed-profile module is ready,
-                  you will be able to review, adjust, and confirm these details alongside your portal profile.
+                  Signed in as <strong>{userEmail}</strong>. These reviewed values stay on this page only and are not saved yet.
                 </p>
                 <button type="button" onClick={handleReset} className="reset-button">
                   Upload a different card

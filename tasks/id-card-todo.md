@@ -2,6 +2,8 @@
 
 Status: Proposed for review on 2026-10-04. Source: [SPEC-id-card-extraction.md](../SPEC-id-card-extraction.md). Design: [id-card-plan.md](id-card-plan.md). This list is separate from the completed [identity tasks](todo.md).
 
+2026-10-04 user-directed revision: the college card review now shows only editable DOB, residential address, and phone suggestions; name and roll number are entered manually. Noisy raw OCR text and unrelated labels are hidden from this screen. The parser handles repeated sections, border symbols, and blank lines in addresses. Focused parser and desktop/375 px upload browser tests passed. Profile persistence remains a separate module.
+
 Every completed task also follows the Definition of Done in the plan: passing focused tests, lint/type checks and build when affected, relevant runtime inspection, truthful documentation, and no sensitive artifacts. Run each PowerShell command separately.
 
 ## Task 1: OCR dependencies and local English asset

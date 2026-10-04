@@ -21,6 +21,7 @@ export type ExtractedFields = Readonly<{
   department: string;
   program: string;
   birthDate: string;
+  residentialAddress: string;
   year: string;
   email: string;
   phone: string;
@@ -60,6 +61,7 @@ export const EMPTY_FIELDS: ExtractedFields = Object.freeze({
   department: '',
   program: '',
   birthDate: '',
+  residentialAddress: '',
   year: '',
   email: '',
   phone: '',

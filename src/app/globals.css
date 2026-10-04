@@ -140,6 +140,20 @@ a { color: #135e52; text-underline-offset: .15em; }
   color: #142b29;
 }
 
+.review-fields { display: grid; gap: .5rem; max-width: 38rem; }
+.review-fields label { font-weight: 700; color: #2d4540; margin-top: .5rem; }
+.review-fields input, .review-fields textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: .65rem .8rem;
+  border: 1px solid #849c92;
+  border-radius: .35rem;
+  font: inherit;
+  color: #142b29;
+  background: white;
+}
+.review-fields textarea { resize: vertical; white-space: pre-wrap; }
+
 .fields-grid {
   display: grid;
   gap: 0.5rem;

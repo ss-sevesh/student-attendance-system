@@ -339,6 +339,65 @@ export function parseFields(rawText: string): {
   };
 }
 
+function singleCandidate(values: Set<string>): string {
+  return values.size === 1 ? [...values][0]! : '';
+}
+
+function cleanAddressLine(raw: string): string {
+  return raw
+    .replace(/^[\s|\\;:,.[\]()§¥]+/gu, '')
+    .replace(/[\s|\\;,]+$/gu, '')
+    .replace(/^[A-Z]{1,2}\s+(?=[SDW]\/O\b)/i, '')
+    .replace(/^\d\s+(?=[A-Z][A-Z\s-]*-\d{6}$)/i, '')
+    .trim();
+}
+
+/** The college card has a fixed labeled DOB/address/phone section. */
+function parseCollegeCardSection(rawText: string): Pick<ExtractedFields, 'birthDate' | 'residentialAddress' | 'phone'> {
+  const birthDates = new Set<string>();
+  const addresses = new Set<string>();
+  const phones = new Set<string>();
+  let addressLines: string[] | null = null;
+
+  function finishAddress() {
+    if (addressLines?.length) addresses.add(addressLines.join('\n'));
+    addressLines = null;
+  }
+
+  for (const rawLine of rawText.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    const birthDate = line.match(/\b(?:date\s+of\s+birth|d\.?\s*o\.?\s*b\.?)\s*[:=-]\s*(\d{1,2}[./-]\d{1,2}[./-]\d{4})\b/i);
+    if (birthDate) birthDates.add(birthDate[1]);
+    const phone = line.match(/\b(?:phone|mobile)(?:\s*(?:no|number))?\s*[:=-]\s*(?:\+?91[\s-]?)?([6-9]\d{9})\b/i);
+    if (phone) phones.add(phone[1]);
+
+    const addressLabel = line.match(/\b(?:resi\.?|residential)?\s*address\s*[:=-]\s*/i);
+    if (addressLabel) {
+      finishAddress();
+      addressLines = [];
+      const inline = cleanAddressLine(line.slice(addressLabel.index! + addressLabel[0].length));
+      if (inline) addressLines.push(inline);
+      continue;
+    }
+
+    if (!addressLines) continue;
+    if (!line) continue;
+    if (/\b(?:phone|mobile|date\s+of\s+birth|blood\s+group|roll\s+no|student\s+id)\s*[:=-]/i.test(line)) {
+      finishAddress();
+      continue;
+    }
+    const cleaned = cleanAddressLine(line);
+    if (cleaned) addressLines.push(cleaned);
+  }
+  finishAddress();
+
+  return {
+    birthDate: singleCandidate(birthDates),
+    residentialAddress: singleCandidate(addresses),
+    phone: singleCandidate(phones),
+  };
+}
+
 /**
  * Main entry point: parse raw OCR text into an ExtractionResult.
  */
@@ -361,5 +420,11 @@ export function parseIdCardText(rawText: string): ExtractionResult {
   }
 
   const { fields, additionalFields } = parseFields(rawText);
-  return successResult(rawText, fields, additionalFields);
+  const college = parseCollegeCardSection(rawText);
+  return successResult(rawText, {
+    ...fields,
+    birthDate: college.birthDate || fields.birthDate,
+    residentialAddress: college.residentialAddress,
+    phone: college.phone || fields.phone,
+  }, additionalFields);
 }
