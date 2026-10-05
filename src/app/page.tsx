@@ -1,16 +1,9 @@
-import Link from 'next/link';
+import { PrototypeDashboard } from '../components/prototype-dashboard';
+import { prototypeStatus } from '../lib/attendance/prototype';
+import { allPeriods } from '../lib/attendance/service';
 
-export default function HomePage() {
-  return (
-    <main className="welcome">
-      <p className="eyebrow">Student Registration</p>
-      <h1>Your student information, in one place.</h1>
-      <p>Review your ID card and student portal details before saving your profile.</p>
-      <p><Link href="/signup">Create account</Link> or <Link href="/login">sign in</Link> to continue.</p>
-      <section className="status" aria-labelledby="status-title">
-        <h2 id="status-title">Getting ready</h2>
-        <p>Account access is available. Student registration is coming next.</p>
-      </section>
-    </main>
-  );
+export const dynamic = 'force-dynamic';
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+  const { view } = await searchParams;
+  return <PrototypeDashboard admin={view === 'admin'} initial={{ ...prototypeStatus(), timetable: allPeriods() }} />;
 }

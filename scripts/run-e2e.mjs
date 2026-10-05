@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const args = process.argv.slice(2);
-const admin = args.some((arg) => arg.includes('playwright.admin.config.ts'));
+const admin = args.some((arg) => arg.includes('admin.config.ts'));
 const port = admin ? 3105 : 3100;
 const origin = `http://127.0.0.1:${port}`;
 const env = {

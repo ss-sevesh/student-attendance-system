@@ -62,6 +62,9 @@ test('admin timetable edits appear to students while role and record safeguards 
     expect((await studentPage.request.delete(`${origin}/api/attendance/periods`, {
       data: { id: firstId }, headers: { Origin: origin },
     })).status()).toBe(403);
+    expect((await studentPage.request.put(`${origin}/api/attendance/periods`, {
+      data: { weekday: 0, periods: [] }, headers: { Origin: origin },
+    })).status()).toBe(403);
 
     await studentPage.goto(`${origin}/attendance`);
     await expect(studentPage.getByText(firstName)).toBeVisible();
@@ -98,5 +101,24 @@ test('admin timetable edits appear to students while role and record safeguards 
   } finally {
     await student.close();
   }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: 'Enter timetable manually' }).click();
+  await page.getByLabel('Timetable weekday').selectOption('0');
+  await page.getByLabel('Period 1 name', { exact: true }).fill('Manual Mathematics');
+  await page.getByLabel('Period 1 start time', { exact: true }).fill('08:30');
+  await page.getByRole('button', { name: 'Save seven periods' }).click();
+  await expect(page.getByRole('status')).toContainText('Seven periods saved for Sunday');
+  await page.reload();
+  await page.getByRole('button', { name: 'Enter timetable manually' }).click();
+  await page.getByLabel('Timetable weekday').selectOption('0');
+  await expect(page.getByLabel('Period 1 name', { exact: true })).toHaveValue('Manual Mathematics');
+  await expect(page.getByLabel('Period 1 start time', { exact: true })).toHaveValue('08:30');
+  await page.getByLabel('Period 1 name', { exact: true }).fill('Edited Mathematics');
+  await page.getByLabel('Period 1 start time', { exact: true }).fill('08:45');
+  await page.getByRole('button', { name: 'Save seven periods' }).click();
+  await expect(page.getByRole('status')).toContainText('Seven periods saved');
+  const saved = (await (await page.request.get('/api/attendance/periods')).json()).periods as { weekday: number; name: string; start_time: string }[];
+  expect(saved.filter((row) => row.weekday === 0)).toHaveLength(7);
+  expect(saved.find((row) => row.name === 'Edited Mathematics')?.start_time).toBe('08:45');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

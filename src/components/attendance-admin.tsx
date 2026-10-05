@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { ManualTimetable } from './manual-timetable';
 
 type Period = { id: number; weekday: number; start_time: string; name: string };
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -48,6 +49,7 @@ export function AttendanceAdmin() {
   return <>
     {error && <p role="alert" className="form-error">{error}</p>}
     {message && <p role="status">{message}</p>}
+    {periods && <ManualTimetable periods={periods} onSaved={(saved) => { setPeriods(saved); setMessage(''); setError(''); }} />}
     <form className="attendance-admin-form" onSubmit={(event) => { event.preventDefault(); void change('POST', { weekday, startTime, name }); }}>
       <label htmlFor="period-day">Weekday</label>
       <select id="period-day" value={weekday} onChange={(event) => setWeekday(Number(event.target.value))}>

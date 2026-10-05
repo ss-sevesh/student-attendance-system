@@ -3,7 +3,7 @@ import type { DatabaseSync } from 'node:sqlite';
 export function initializeSchema(db: DatabaseSync): void {
   db.exec('PRAGMA foreign_keys = ON');
   const version = db.prepare('PRAGMA user_version').get() as { user_version: number };
-  if (version.user_version > 3) throw new Error('Database schema is newer than this application');
+  if (version.user_version > 4) throw new Error('Database schema is newer than this application');
   if (version.user_version === 0) db.exec(`
     BEGIN;
     CREATE TABLE users (
@@ -63,6 +63,17 @@ export function initializeSchema(db: DatabaseSync): void {
       distance REAL NOT NULL
     );
     PRAGMA user_version = 3;
+    COMMIT;
+  `);
+  if (version.user_version < 4) db.exec(`
+    BEGIN;
+    ALTER TABLE attendance_periods ADD COLUMN end_time TEXT;
+    CREATE TABLE prototype_photos (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      encrypted_photo TEXT NOT NULL,
+      saved_at INTEGER NOT NULL
+    );
+    PRAGMA user_version = 4;
     COMMIT;
   `);
 }

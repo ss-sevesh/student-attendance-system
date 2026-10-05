@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Student Registration',
-  description: 'Review and save your student information.',
+  title: 'Attend. — Campus attendance',
+  description: 'Save your photo, manage your timetable, and check in for class.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

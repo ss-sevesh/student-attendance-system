@@ -4,11 +4,40 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { beforeEach, expect, it } from 'vitest';
 import { openDatabase } from '../../src/lib/db/sqlite';
-import { addPeriod, checkIn, deletePeriod, enroll, isOpen, status, validateDescriptor } from '../../src/lib/attendance/service';
+import { addPeriod, allPeriods, checkIn, deletePeriod, enroll, isOpen, saveTimetableDay, status, validateDescriptor } from '../../src/lib/attendance/service';
 import { readAttendanceJson, requireAdmin } from '../../src/lib/attendance/http';
 
 const descriptor = Array(128).fill(0.01) as number[];
 process.env.ATTENDANCE_KEY = '01'.repeat(32);
+
+it('saves seven periods and edits names and times without losing attendance records', () => {
+  const now = new Date('2026-10-05T03:31:00.000Z');
+  const existing = status('student-1', now).periods;
+  enroll('student-1', descriptor);
+  checkIn('student-1', existing[0].id, descriptor, now);
+  const rows = Array.from({ length: 7 }, (_, index) => ({
+    ...(existing[index] ? { id: existing[index].id } : {}),
+    name: `Subject ${index + 1}`, startTime: `${9 + index}:00`.padStart(5, '0'),
+  }));
+  saveTimetableDay(1, rows);
+  const saved = status('student-1', now).periods;
+  expect(saved).toHaveLength(7);
+  expect(saved[0]).toMatchObject({ id: existing[0].id, name: 'Subject 1', recordedAt: now.getTime() });
+  saveTimetableDay(1, saved.map((row, index) => ({ id: row.id, name: index === 0 ? 'Mathematics' : row.name, startTime: index === 0 ? '08:30' : row.start_time })));
+  expect(status('student-1', now).periods[0]).toMatchObject({ name: 'Mathematics', start_time: '08:30', recordedAt: now.getTime() });
+  expect(allPeriods().filter((row) => row.weekday === 2)).toHaveLength(2);
+});
+
+it('rejects incomplete, unordered and stale timetable edits without partial writes', () => {
+  const before = allPeriods();
+  const existing = before.filter((row) => row.weekday === 1);
+  const rows = Array.from({ length: 7 }, (_, index) => ({ id: existing[index]?.id, name: `Period ${index + 1}`, startTime: `${String(9 + index).padStart(2, '0')}:00` }));
+  expect(() => saveTimetableDay(1, rows.slice(0, 6))).toThrow('exactly seven');
+  expect(() => saveTimetableDay(1, rows.map((row) => ({ ...row, startTime: '09:00' })))).toThrow('chronological');
+  expect(() => saveTimetableDay(1, rows.map((row) => ({ ...row, id: undefined })))).toThrow('timetable changed');
+  expect(() => saveTimetableDay(1, rows.map((row, index) => ({ ...row, name: index === 6 ? '' : row.name })))).toThrow('valid name');
+  expect(allPeriods()).toEqual(before);
+});
 
 beforeEach(() => {
   process.env.DATABASE_PATH = join(tmpdir(), `attendance-${randomUUID()}.sqlite`);
@@ -38,7 +67,7 @@ it('migrates an identity-only database while preserving its users', () => {
   legacy.close();
   const migrated = openDatabase(path);
   try {
-    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 3 });
+    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 4 });
     expect(migrated.prepare('SELECT email FROM users WHERE id = ?').get('legacy')).toEqual({ email: 'legacy@example.com' });
     expect(migrated.prepare('SELECT count(*) AS count FROM attendance_periods').get()).toEqual({ count: 10 });
   } finally { migrated.close(); }

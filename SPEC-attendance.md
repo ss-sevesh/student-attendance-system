@@ -73,3 +73,9 @@ Keep biometric provider details behind one adapter; do not mix model inference, 
 ## Prototype scope
 
 The user asked to make the prototype quickly and keep the code simple. The local demo uses browser-side face descriptors from same-origin model assets, server-side descriptor distance, and an encrypted reference. It has no validated liveness or identity proofing, so it must not be used to decide real attendance. The existing OCR module remains temporary and unchanged.
+
+## Prototype update (2026-10-05)
+
+The user has explicitly replaced the account-gated attendance UI with a no-login, shared Student/Admin workspace. Saving a photo now persists an encrypted normalized JPEG and encrypted face reference, with a saved preview and timestamp. Admin edits seven period names and start/end ranges. Prototype check-in selects the active period on the server and allows any time in its [start, end) range. These choices supersede the earlier five-minute and admin-email requirements for the prototype UI. Existing authenticated APIs retain their prior behavior.
+
+UI direction: retain the forest-green palette, use a warm neutral workspace, clear Student/Admin navigation, a photo panel and camera panel, and readable period rows. On small screens panels stack and controls remain labeled and keyboard accessible.

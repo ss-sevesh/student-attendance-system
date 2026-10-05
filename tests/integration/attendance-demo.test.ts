@@ -96,11 +96,11 @@ it('adds demo tables to a version 2 database without changing existing class dat
   checkIn('one', periodId, descriptor, classTime);
   // Recreate the legacy state after adding representative attendance data.
   const legacy = openDatabase(process.env.DATABASE_PATH!);
-  legacy.exec('DROP TABLE attendance_demo_records; DROP TABLE attendance_demo_references; PRAGMA user_version = 2;');
+  legacy.exec('DROP TABLE attendance_demo_records; DROP TABLE attendance_demo_references; DROP TABLE prototype_photos; ALTER TABLE attendance_periods DROP COLUMN end_time; PRAGMA user_version = 2;');
   legacy.close();
   const migrated = openDatabase(process.env.DATABASE_PATH!);
   try {
-    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 3 });
+    expect(migrated.prepare('PRAGMA user_version').get()).toEqual({ user_version: 4 });
     expect(migrated.prepare('SELECT count(*) AS count FROM users').get()).toEqual({ count: 2 });
     expect(migrated.prepare('SELECT recorded_at FROM attendance_records WHERE user_id = ?').get('one')).toEqual({ recorded_at: classTime.getTime() });
     expect(migrated.prepare('SELECT count(*) AS count FROM attendance_demo_references').get()).toEqual({ count: 0 });

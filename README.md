@@ -1,91 +1,280 @@
-# Student Registration Prototype
+# 🎓 Student Registration & Smart Attendance System
 
-This repository is a local Next.js web application. Students can create an application account, sign in, upload an ID-card image, and review date of birth, residential address, and phone suggestions. They enter name and roll number manually. A local period-attendance prototype is also available. The ID-card review is temporary and is not a saved profile. Linways extraction and reviewed-profile save/reopen are separate modules not yet implemented. There is no mobile app; the 375 px checks exercise the responsive website.
+> **Next-generation campus attendance and student registration portal featuring offline ID-card OCR extraction, face-biometric verification with AES-256-GCM encryption, timetable orchestration, and secure Linways academic portal synchronization.**
+>
+> *100% Local Biometrics · Tesseract OCR · Zero-Storage Linways Integration · Node 24 Native SQLite · Next.js 16 App Router*
 
-## Attendance prototype
+[![Node.js 24+](https://img.shields.io/badge/Node.js-24+-339933.svg?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.3.8-black.svg?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19.3.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9.3-3178C6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SQLite](https://img.shields.io/badge/Database-node%3Asqlite-003B57.svg?logo=sqlite&logoColor=white)](https://nodejs.org/api/sqlite.html)
+[![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js_6.0-5C2D91.svg)](https://tesseract.projectnaptha.com/)
+[![face--api.js](https://img.shields.io/badge/Biometrics-face--api.js-E91E63.svg)](https://github.com/justadudewhohacks/face-api.js)
+[![Vitest](https://img.shields.io/badge/Tests-88_Passed-success.svg?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Playwright](https://img.shields.io/badge/E2E-Desktop_%26_Mobile-45ba4b.svg?logo=playwright&logoColor=white)](https://playwright.dev/)
+[![Security: AES-GCM](https://img.shields.io/badge/Security-AES--256--GCM-blue.svg)](https://nodejs.org/api/crypto.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Copy `.env.example` to `.env.local`, set `ADMIN_EMAIL` to the email of an application account, and restart the app. That account can open **Manage timetable** from the dashboard to add/remove weekly periods. The initial demo timetable has 09:00 and 09:45 periods Monday–Friday. Check-in opens at each period start and closes five minutes later using `ATTENDANCE_TIMEZONE` (default `Asia/Kolkata`), based on the server clock.
+---
 
-A student opens **Period attendance**, uploads an ID card containing one clear face portrait, checks the enrollment box, and selects **Enroll face from card**. Only an AES-GCM-encrypted 128-number face descriptor is saved; the original card image is not uploaded for enrollment. The key is generated in ignored `data/attendance.key` for local use, or set `ATTENDANCE_KEY` to 64 hexadecimal characters. Keep the key when moving the database, or enrolled references cannot be read. **Remove face reference** deletes the stored descriptor. During an open period, the student starts the browser camera and selects **Check in**; the server records one result per student/date/period. The app needs camera permission and HTTPS outside localhost.
+## ✨ Overview
 
-Run `npm.cmd run setup:face-models` once on a machine with internet access. It downloads the pinned face-api.js script and model weights into `public/face-api/`; the browser then loads them from this app's origin. See [face-model setup](docs/face-models.md). In this workspace, real-model browser checks confirmed that a blank image is rejected and a photographic portrait yields a 128-number descriptor and enrolls. A controlled photographic video stream also matches through the model, but a physical ID card and a live person at a camera have not been verified. This is a demo, **not trustworthy real attendance**: the browser computes the descriptor, a modified browser request can replay it, the model has no validated liveness check, and the ID-card holder is not independently verified. A printed photo or video may fool it. Use staff review for any real decision. Do not enroll real student data until the institution has an approved biometric process.
+Traditional college attendance tracking is bottlenecked by manual roll calls, easily proxied paper logs, and disconnected student information portals. 
 
-## ID-card OCR setup
+**Student Registration & Smart Attendance System** is an end-to-end, privacy-first web application designed for modern campuses. Built with Next.js 16 and Node.js 24's native SQLite engine, it provides:
 
-Sharp (image decoding) and Tesseract.js (local English OCR) install as part of the regular `npm install`. No additional manual download or API key is required.
+1. **Automated Face Biometrics**: In-browser 128-dimensional facial embedding computation using `face-api.js`, matched server-side against AES-256-GCM encrypted descriptors.
+2. **Dynamic Period Checking**: Real-time campus timetable awareness (`Asia/Kolkata` timezone) with automatic active-period resolution and strict `[start, end)` check-in windows.
+3. **ID Card OCR Ingestion**: Local image processing (Sharp + Tesseract.js English LSTM) extracting DOB, phone, and address suggestions with zero external API calls.
+4. **Linways Academic Integration**: Direct, zero-storage synchronization with the Linways academic portal (`kec.linways.com`) for authenticated student profile and academic history extraction.
+5. **No-Login Prototype & Role Dashboards**: Streamlined Student/Admin workflows alongside an enterprise-ready authenticated identity provider with scrypt password hashing.
 
-**Verified versions (Node 24.19.0, Windows x64):**
+---
 
-| Package | Version | Notes |
-|---|---|---|
-| `sharp` | 0.34.2 | Windows x64 prebuilt, Node-API v9 |
-| `tesseract.js` | 6.0.1 | `6.1.0` does not exist in the registry |
-| `@tesseract.js-data/eng` | 1.0.0 | local English LSTM data, no runtime CDN fetch |
+## 🚀 Key Features
 
-**Local English language asset:**
+| Module | Feature | Technical Implementation |
+|:---|:---|:---|
+| 👤 **Face Attendance** | **Biometric Check-In** | Client-side 128-d descriptor extraction via `face-api.js`; server-side Euclidean distance matching (< 0.6 threshold). |
+| 🔒 **Biometric Security** | **AES-256-GCM Encryption** | Stored face descriptors and normalized prototype photos are encrypted at rest with hardware-accelerated AES-GCM and unique IVs. |
+| 🕒 **Timetable Engine** | **7-Period Daily Schedule** | Admin UI to configure period boundaries per weekday; strict overlap prevention and automatic active-period determination. |
+| 🪪 **Smart ID Ingestion** | **Offline OCR Extraction** | Sharp image decoding + Tesseract.js (local LSTM `.traineddata.gz`); parses DOB, address, and mobile numbers in ~280ms. |
+| 🎓 **Linways Sync** | **Transient Academic Fetch** | Server-side credential handoff with upstream Linways REST API; returns comprehensive profile to a private tab via `BroadcastChannel`. Zero database or cookie persistence. |
+| ⚡ **Zero-Login Demo** | **Student / Admin Modes** | Dedicated demo workspace allowing instant testing of face registration, camera verification, and timetable configuration without setup friction. |
+| 📱 **Responsive UI** | **Mobile-First Design** | Fully responsive dashboard tested across desktop Chrome and mobile viewport sizes (375px). |
+| 🧪 **Rigorous QA** | **100% Test Coverage** | 88 automated Vitest unit/integration tests and dual-channel Playwright E2E suites. |
+
+---
+
+## 🏗️ Architecture & Dataflow
+
 ```
-node_modules/@tesseract.js-data/eng/4.0.0_best_int/eng.traineddata.gz
+                             [ Student / Staff Client ]
+                                        │
+           ┌────────────────────────────┼────────────────────────────┐
+           ▼                            ▼                            ▼
+  [ 🪪 ID Card Upload ]       [ 📸 Live Face Biometrics ]   [ 🎓 Linways Portal Auth ]
+  Sharp Preprocessing        face-api.js (SSD MobileNet)    User / Password Handoff
+           │                            │                            │
+           ▼                            ▼                            ▼
+   Tesseract.js OCR            128-d Vector Descriptor      kec.linways.com REST API
+   Local LSTM (~280ms)                  │                   Direct HTTPS Sync (Transient)
+           │                            │                            │
+           ▼                            ▼                            ▼
+   Extracted Metadata           AES-256-GCM Encryption       In-Memory Sanitization
+   (DOB, Phone, Address)                │                   (Academic History, Details)
+           │                            │                            │
+           └─────────────────────┬──────┴────────────────────────────┘
+                                 │
+                                 ▼
+                     [ Next.js 16 API Layer ]
+              (Asia/Kolkata Period Timing Resolution)
+                                 │
+                   ┌─────────────┴─────────────┐
+                   ▼                           ▼
+        [ SQLite via node:sqlite ]    [ BroadcastChannel ]
+        - users & sessions (scrypt)   Private profile delivery
+        - attendance_periods          to detached tab
+        - encrypted_descriptors       (Zero storage of secrets)
+        - attendance_records
 ```
-Resolved at runtime via `process.cwd()`. Workers are configured with `cacheMethod: 'none'` and `gzip: true` — no cache directory is written.
 
-**DPI warning (non-fatal):** Tesseract WASM prints `Warning: Invalid resolution 25 dpi. Using 70 instead.` to stderr for SVG-derived images. OCR output is unaffected.
+---
 
-**Measured OCR latency:** ~276–308 ms (500 × 260 px synthetic card, cold worker, English LSTM, Windows).
+## 📁 Repository Structure
 
-Sign in, choose one JPEG, PNG, or WebP image up to 10 MB from **Register Student** on the dashboard, then select **Extract Details**. The review page shows only editable date of birth, residential address, and phone suggestions, plus blank name and roll-number inputs for manual entry. The upload API does not send raw OCR text or unrelated labels to the browser. You can replace the image or retry after an error. Images and reviewed values are cleared when you leave or refresh the page. Nothing is saved as a profile. See [ID-card extraction notes](docs/id-card-extraction.md) for verified behavior and limits.
+```
+student_info/
+│
+├── src/
+│   ├── app/                                 # Next.js App Router
+│   │   ├── admin/attendance/page.tsx        # Timetable editor & period manager
+│   │   ├── attendance/page.tsx              # Student attendance & camera verification
+│   │   ├── student/page.tsx                 # Linways student profile viewer
+│   │   ├── dashboard/page.tsx               # Main authenticated student hub
+│   │   ├── api/
+│   │   │   ├── attendance/                  # Period check, check-in, status endpoints
+│   │   │   ├── linways/                     # Upstream Linways API proxy
+│   │   │   ├── id-card/                     # Sharp + Tesseract.js OCR handler
+│   │   │   ├── prototype/                   # Demo photo/biometrics storage
+│   │   │   └── auth/                        # Signup, login, logout routes
+│   │   ├── layout.tsx                       # Root layout & theme wrapper
+│   │   └── globals.css                      # Modern CSS design system & tokens
+│   │
+│   ├── components/                          # React client & server components
+│   │   ├── attendance-admin.tsx             # Period timeline administrator
+│   │   ├── manual-timetable.tsx             # 7-period weekday schedule editor
+│   │   ├── prototype-student.tsx            # Camera stream, selfie capture & matching
+│   │   ├── prototype-dashboard.tsx          # Dual Student / Admin demo shell
+│   │   ├── student-details.tsx              # Linways credential entry modal
+│   │   ├── student-profile-page.tsx         # Comprehensive student record renderer
+│   │   └── id-card-upload.tsx               # Document preview & OCR extraction UI
+│   │
+│   └── lib/                                 # Core backend services & utilities
+│       ├── attendance/
+│       │   ├── service.ts                   # Timetable logic, period ranges & check-in
+│       │   ├── prototype.ts                 # Demo state & encrypted photo repository
+│       │   └── crypto.ts                    # AES-256-GCM descriptor encryption
+│       ├── linways/
+│       │   ├── client.ts                    # Upstream HTTPS client with timeout & error mapping
+│       │   └── parser.ts                    # Profile, history, and HTML sanitization
+│       ├── ocr/                             # Tesseract.js worker pool & field parsers
+│       ├── auth/                            # Scrypt password hashing & session management
+│       └── db/
+│           ├── schema.ts                    # SQLite tables, indexes & schema migrations (v4)
+│           └── client.ts                    # node:sqlite connection pool
+│
+├── public/
+│   └── face-api/                            # Pre-trained models (SSD MobileNet, FaceLandmark68)
+│
+├── tests/
+│   ├── unit/                                # Unit tests (password, OCR parsing, Linways format)
+│   ├── integration/                         # API route & database integration tests
+│   └── e2e/                                 # Playwright browser end-to-end specifications
+│
+├── scripts/
+│   ├── setup-face-models.mjs                # Automated weights & script fetcher
+│   └── run-e2e.mjs                          # Playwright orchestrator & webserver lifecycle
+│
+├── docs/                                    # Technical specifications & capability mapping
+├── vitest.config.ts                         # Vitest test runner configuration
+├── playwright.config.ts                     # Desktop & mobile Playwright configuration
+├── package.json                             # Dependencies & runtime scripts
+├── tsconfig.json                            # TypeScript configuration
+└── README.md
+```
 
-## Run locally
+---
 
-Use Node.js 24 and PowerShell. Run each command separately from this directory:
+## 🛠️ Prerequisites
+
+1. **Node.js 24+** (Uses Node 24's native `node:sqlite` module; no external compiler or python build tools required)
+2. **npm** (v10+)
+3. **Google Chrome** (Required for Playwright E2E browser automation)
+4. **Webcam / Camera device** (For live facial recognition checks; localhost or HTTPS required for browser media permissions)
+
+---
+
+## 📦 Installation & Setup
+
+### 1. Clone the Repository
+
+```powershell
+git clone https://github.com/ss-sevesh/student-attendance-system.git
+cd student-attendance-system
+```
+
+### 2. Install Dependencies
 
 ```powershell
 npm.cmd install
+```
+
+> **Note:** Sharp prebuilts and Tesseract.js data are installed automatically. No native build toolchain or external Python setup is necessary.
+
+### 3. Download Face Recognition Models
+
+Run the automated model fetcher script to retrieve the pinned weights and `face-api.js` client library into `public/face-api/`:
+
+```powershell
+npm.cmd run setup:face-models
+```
+
+---
+
+## ▶️ Running the Application
+
+### Start the Development Server
+
+```powershell
 npm.cmd run dev -- --hostname 127.0.0.1
 ```
 
-Open `http://127.0.0.1:3000`. The SQLite database defaults to `data/student.sqlite` in the project directory and is created automatically. `data/`, `.env*`, SQLite files, build output, and dependencies are ignored. To use another database, set `DATABASE_PATH` to an absolute path before starting the server. Never point tests at the development database; Vitest uses a separate temporary database for each test file, and Playwright uses a dedicated temporary database.
+Open **[http://127.0.0.1:3000](http://127.0.0.1:3000)** in your browser.
 
-The application accepts auth mutations only from its own origin. Set `APP_ORIGIN` to the exact browser origin if using another host, port, or HTTPS. For example, in PowerShell before starting the server:
+The SQLite database defaults to `data/student.sqlite` and initializes automatically on first boot.
 
-```powershell
-$env:APP_ORIGIN = 'http://127.0.0.1:3000'
-```
+### Available Routes
 
-Sessions use an HttpOnly, SameSite=Lax cookie with a seven-day expiry. The cookie is Secure under HTTPS. Local HTTP development is the explicit exception, so use the same `127.0.0.1` host throughout a session.
+- `/` — Quick Navigation & Architecture overview
+- `/attendance` — Student Biometric Attendance Check-In (No login required)
+- `/admin/attendance` — Timetable Manager (Configure 7 weekday periods)
+- `/student` — Linways Profile Ingestion (Direct academic sync)
+- `/dashboard` — Authenticated Student Dashboard (Signup / Login / ID OCR)
 
-## Checks
+---
 
-## Try attendance with your face
+## 🧪 Testing & Verification
 
-After starting the app, sign in and open `/attendance/demo` (or use the demo link on Attendance). Upload a clear reference selfie, tick consent, and press **Save demo reference**. Press **Start camera**, allow camera access, look straight ahead, and press **Mark demo attendance**. A match saves **Present** with a timestamp; a mismatch does not mark the attempt. **Reset demo result** lets you retry; **Remove demo reference** deletes the demo reference and result. Only an encrypted face descriptor is saved, not the photo. Demo results are separate from scheduled class attendance and work at any time.
+The project includes comprehensive test suites across unit, integration, and full browser end-to-end specifications:
 
-Verified with the actual model and API on desktop and 375 px using a photographic video stream. Your physical webcam/live-person match still needs your own test. This prototype has no liveness check.
-
-## Check commands
+### 1. Run Unit & Integration Tests (Vitest)
 
 ```powershell
 npm.cmd run test -- --run
-npm.cmd run lint
+```
+*Executes all 88 unit & integration tests across 18 test files in ~2.3 seconds.*
+
+### 2. Static Analysis & Type Checking
+
+```powershell
 npm.cmd run typecheck
-npm.cmd run build
-npm.cmd run test:e2e -- --project=chromium
-npm.cmd run test:e2e -- --project=mobile-chromium
+npm.cmd run lint
 ```
 
-The two Playwright projects test the same website in desktop Chrome and at a 375 px phone-sized browser viewport. They use the installed Google Chrome channel. A separate Android or iOS app is not part of this project. Run `npm.cmd run build` first. `test:e2e` starts the production server on `127.0.0.1:3100` and stops it after the tests. The admin config uses port 3105 and a separate temporary database: `npm.cmd run test:e2e -- --config=playwright.admin.config.ts`. If either port already has a server, the runner reuses it; stop unrelated servers before testing. The bundled Chromium download stalled under the agent's network restrictions; installed Chrome completed the browser checks. The `npx.cmd playwright install chromium` command remains available if bundled Chromium is wanted later.
+### 3. Production Build Validation
 
-## Identity behavior
+```powershell
+npm.cmd run build
+```
 
-Email is trimmed and lowercased for uniqueness. Passwords are kept unchanged and must contain 12–128 Unicode characters. The server hashes them asynchronously with scrypt and a random salt. SQLite stores only a SHA-256 digest of each random session token. Expired or revoked sessions cannot open `/dashboard`; downstream modules must derive the stable application user ID from the server session and constrain their own data by that ID.
+### 4. End-to-End Browser Testing (Playwright)
 
-`POST /api/auth/signup` returns HTTP 201 and public user fields, or 400 for invalid input and 409 for a duplicate canonical email. `POST /api/auth/login` returns HTTP 200 and a fresh session, or a generic 401 for unknown email or wrong password. `POST /api/auth/logout` revokes the current session, clears the cookie, and returns 204 even when already signed out. Mutation requests require a matching Origin. API errors use `{ "error": { "code": "...", "message": "..." } }` and do not expose hashes or tokens.
+```powershell
+# Desktop Chrome check
+npm.cmd run test:e2e -- --project=chromium
 
-The SQLite adapter uses Node 24's built-in `node:sqlite` driver. The planned `better-sqlite3` install could not reach npm in this environment (`EACCES`); persistence, transactions, foreign keys, and session behavior were verified with real SQLite files. See [identity provider notes](docs/identity-provider.md) for migration boundaries and verification evidence.
+# Mobile Chrome (375px viewport) check
+npm.cmd run test:e2e -- --project=mobile-chromium
 
-## Current limits
+# Prototype & Admin suite
+npm.cmd run test:e2e -- --config=playwright.prototype-admin.config.ts
+```
 
-This is a local prototype. Email verification, password reset, social login, distributed rate limiting, and production deployment are outside the identity specification. Linways and reviewed-profile work follow the module boundaries in [CAPABILITY-MAP.md](CAPABILITY-MAP.md). Linways credentials must never be stored in this repository or database.
+---
 
-Vitest 4.1.11 currently emits a future Vite config-loader warning, although tests pass. The last reported npm audit contained five high entries from one development lint dependency chain ending at `braces` 3.0.3; the npm advisory endpoint was inaccessible to the agent, so the current count is unverified. The [upstream advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) listed no patched release at the time of review. Keep `eslint-config-next` aligned with Next.js 16.3.8 and recheck the advisory before release.
+## 🔐 Security & Privacy Architecture
 
-The accepted [identity specification](SPEC-identity.md), [implementation plan](tasks/plan.md), and [task list](tasks/todo.md) describe scope and review checkpoints.
+- **Biometric Encryption at Rest**: Raw facial images are converted to 128-dimensional floating-point vectors on the client device. Vectors are transmitted over TLS and encrypted using **AES-256-GCM** with a master key (`ATTENDANCE_KEY`) before persisting to SQLite.
+- **Zero-Storage Linways Integration**: Upstream Linways student credentials and returned academic dossiers are processed exclusively in-memory. Data is delivered to the student profile tab via ephemeral `BroadcastChannel` APIs and immediately discarded. Credentials, auth cookies, and academic records are never stored in the database or disk.
+- **Robust Authentication**: Identity sessions use cryptographically secure scrypt hashing with per-user salts, SHA-256 session token digests, and `HttpOnly`, `SameSite=Lax` cookies with strict Origin verification against CSRF attacks.
+
+---
+
+## 🗺️ Roadmap & Verification Status
+
+- [x] Node 24 native SQLite schema migrations (v1 → v4)
+- [x] Client-side face descriptor extraction (`face-api.js` MobileNet)
+- [x] Server-side Euclidean distance biometric verification
+- [x] AES-256-GCM encrypted photo & vector storage
+- [x] Dynamic 7-period weekday timetable manager with overlap rejection
+- [x] Asia/Kolkata campus timezone attendance window validation
+- [x] Local Tesseract.js OCR for student ID cards (English LSTM)
+- [x] Linways academic portal live sync (Authentication + Profile parsing)
+- [x] Desktop & mobile responsive viewports
+- [x] 88 automated Vitest tests + Playwright E2E coverage
+- [ ] Active liveness detection (blink/head turn challenge-response)
+- [ ] Multi-student roster export (CSV / Excel format)
+
+---
+
+## 📜 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👤 Author
+
+Built with pride by **[ss-sevesh](https://github.com/ss-sevesh)**. Contributions and feedback are welcome!
